@@ -1,1 +1,2 @@
-Initialization
+1. I used AI to generate the file I/O boilerplate in src/storage.js. I validated that it uses fs.promises for non-blocking asynchronous operations and correctly handles the edge case where data.json doesn't exist on the first run (catching the ENOENT error).
+2. 
