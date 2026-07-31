@@ -52,20 +52,81 @@ app.get('/expenses', async (req, res) => {
         const { category } = req.query;
 
         if (category) {
-            const filteredExpenses = expenses.filter(exp => exp.category.toLowerCase() == category.toLowerCase);
+            const filteredExpenses = expenses.filter(exp =>
+
+                exp.category &&
+
+                exp.category.trim().toLowerCase() === category.trim().toLowerCase()
+            );
             return res.json(filteredExpenses);
         }
 
-
-        return res.json(expenses);
-
-
+        res.json(expenses);
     } catch (error) {
-        console.error('Error fetching expense: ', error);
-        res.status(500).json({ error: "Internal Server error" });
-
+        console.error('Error fetching expenses:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+app.get('/expenses/totals', async (req, res) => {
+    try {
+        const expenses = await readExpenses();
+
+        let overallTotal = 0;
+        let categoryTotals = {};
+
+        expenses.forEach(exp => {
+            overallTotal += exp.amount;
+
+            const formattedCategory = exp.category.trim().charAt(0).toUpperCase() + exp.category.trim().slice(1).toLowerCase();
+            if (categoryTotals[formattedCategory]) {
+                categoryTotals[formattedCategory] += exp.amount;
+              
+            } else {
+                categoryTotals[formattedCategory] = exp.amount; 
+            }
+            categoryTotals[formattedCategory].toFixed(2);
+        });
+        overallTotal = overallTotal.toFixed(2);
+        
+
+        res.json({
+            overallTotal,
+            categoryTotals
+        });
+
+    }
+    catch (error) {
+        console.error('Error calculating totals:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+})
+
+
+app.delete('/expenses/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const expenses = await readExpenses();
+
+        const expenseIndex = expenses.findIndex(exp => exp.id === id);
+
+        if (expenseIndex == -1) {
+            return res.status(404).json({ error: "Expense not found" });
+        }
+        const deletedExpense = expenses.splice(expenseIndex, 1)[0];
+        await writeExpenses(expenses);
+
+        res.json({
+            message: 'Expense deleted successfully',
+            deletedExpense
+        })
+    }
+    catch (error) {
+        console.log('Error deleting expense: ', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 
 if (require.main == module) {
     app.listen(PORT, () => {
