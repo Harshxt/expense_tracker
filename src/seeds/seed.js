@@ -37,10 +37,10 @@ function generateExpenses(count) {
         const category = categoryNames[getRandomInt(0, categoryNames.length - 1)];
         const titles = categoriesMap[category];
         const title = titles[getRandomInt(0, titles.length - 1)];
-        
+
         // Random amount between 5.00 and 150.00
         const amount = parseFloat((Math.random() * 145 + 5).toFixed(2));
-        
+
         // Random date within the last 3 months
         const endDate = new Date();
         const startDate = new Date();
@@ -65,14 +65,15 @@ async function seedDatabase() {
     try {
         console.log('Generating expense data...');
         // Generate 25 random expense records
-        const dummyData = generateExpenses(25); 
-        
+        const dummyData = generateExpenses(process.env.SEED_COUNT || 25);
+
         console.log(`Writing ${dummyData.length} records to database...`);
         // We reuse the storage function we already wrote
-        await writeExpenses(dummyData); 
-        
+        await writeExpenses(dummyData);
+
         console.log('Database seeded successfully! You can now start your server and fetch the data.');
-        console.info(JSON.parse(readExpenses));
+        console.log(await readExpenses());
+
     } catch (error) {
         console.error('Error seeding database:', error);
     }

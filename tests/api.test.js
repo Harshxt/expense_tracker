@@ -23,7 +23,7 @@ describe('Smart Expense Tracker API', () => {
         await fs.writeFile(DATA_FILE, originalData);
     });
 
-    // We will save this ID to use in the GET and DELETE tests
+    // saving this ID to use in the GET and DELETE tests
     let createdExpenseId;
 
     describe('POST /expenses', () => {
@@ -38,11 +38,11 @@ describe('Smart Expense Tracker API', () => {
             const response = await request(app)
                 .post('/expenses')
                 .send(newExpense)
-                .expect(201); 
+                .expect(201);
 
             expect(response.body).toHaveProperty('id');
             expect(response.body.title).toBe(newExpense.title);
-            
+
             createdExpenseId = response.body.id; // Save for later
         });
 
@@ -93,7 +93,7 @@ describe('Smart Expense Tracker API', () => {
 
             expect(Array.isArray(response.body)).toBeTruthy();
             // We know there should be at least one from our POST test
-            expect(response.body[0].category).toBe('Food'); 
+            expect(response.body[0].category).toBe('Food');
         });
     });
 
@@ -109,11 +109,11 @@ describe('Smart Expense Tracker API', () => {
         });
 
         it('should reject an invalid month format', async () => {
-             const response = await request(app)
+            const response = await request(app)
                 .get('/expenses/summary?month=July-2026')
                 .expect(400);
-            
-             expect(response.body.error).toBeDefined();
+
+            expect(response.body.error).toBeDefined();
         });
     });
 
