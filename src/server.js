@@ -1,6 +1,5 @@
 const express = require('express');
-
-const { v4: uuid } = require('uuid')
+const { randomUUID } = require('crypto');
 
 const { readExpenses, writeExpenses } = require('./storage');
 
@@ -20,33 +19,33 @@ app.post('/expenses', async (req, res) => {
         const { title, amount, category, date } = req.body;
 
         if (!title || amount === undefined || !category || !date) {
-            return res.status(400).json({ 
-                error: 'Missing required fields: title, amount, category, date' 
+            return res.status(400).json({
+                error: 'Missing required fields: title, amount, category, date'
             });
         }
-        
+
         if (typeof amount !== 'number' || amount <= 0) {
             return res.status(400).json({ error: 'Amount must be a positive number' });
         }
         // Date format validation (YYYY-MM-DD)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(date)) {
-            return res.status(400).json({ 
-                error: 'Invalid date format. Please use YYYY-MM-DD.' 
+            return res.status(400).json({
+                error: 'Invalid date format. Please use YYYY-MM-DD.'
             });
         }
 
         const parsedDate = new Date(date);
         if (isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== date) {
-             return res.status(400).json({ 
-                error: 'Invalid date provided. Please ensure it is a valid calendar date.' 
+            return res.status(400).json({
+                error: 'Invalid date provided. Please ensure it is a valid calendar date.'
             });
         }
 
         const expenses = await readExpenses();
-        
+
         const newExpense = {
-            id: uuid(),
+            id: randomUUID(),
             title,
             amount,
             category,
@@ -99,14 +98,14 @@ app.get('/expenses/totals', async (req, res) => {
             const formattedCategory = exp.category.trim().charAt(0).toUpperCase() + exp.category.trim().slice(1).toLowerCase();
             if (categoryTotals[formattedCategory]) {
                 categoryTotals[formattedCategory] += exp.amount;
-              
+
             } else {
-                categoryTotals[formattedCategory] = exp.amount; 
+                categoryTotals[formattedCategory] = exp.amount;
             }
             categoryTotals[formattedCategory].toFixed(2);
         });
         overallTotal = overallTotal.toFixed(2);
-        
+
 
         res.json({
             overallTotal,
@@ -124,29 +123,29 @@ app.get('/expenses/totals', async (req, res) => {
 app.get('/expenses/summary', async (req, res) => {
     try {
         const { month } = req.query; // Expecting format YYYY-MM
-        
-       
+
+
         if (!month || !/^\d{4}-\d{2}$/.test(month)) {
-            return res.status(400).json({ 
-                error: 'Please provide a valid month query parameter in YYYY-MM format (e.g., ?month=2026-07)' 
+            return res.status(400).json({
+                error: 'Please provide a valid month query parameter in YYYY-MM format (e.g., ?month=2026-07)'
             });
         }
 
         const expenses = await readExpenses();
-        
+
         let total = 0;
         const categoryBreakdown = {};
 
-        
+
         const monthlyExpenses = expenses.filter(exp => exp.date.startsWith(month));
 
         // Aggregate the totals for the matching expenses
         monthlyExpenses.forEach(exp => {
             total += exp.amount;
-            
+
             // Normalize category string
             const cat = exp.category.trim().charAt(0).toUpperCase() + exp.category.trim().slice(1).toLowerCase();
-            
+
             if (categoryBreakdown[cat]) {
                 categoryBreakdown[cat] += exp.amount;
             } else {
